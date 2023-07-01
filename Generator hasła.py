@@ -1,9 +1,42 @@
-import os
-import random
 import string
 import tkinter as tk
 from tkinter import messagebox
 import pyperclip
+import random
+import os
+
+def calculate_password_strength(password):
+    strength = 0
+
+    if len(password) >= 8 and len(password) <= 12:
+        strength += 1
+    elif len(password) > 12:
+        strength += 2
+
+    special_chars = string.punctuation
+    if any(char in special_chars for char in password):
+        strength += 1
+
+    character_types = 0
+    if any(char.islower() for char in password):
+        character_types += 1
+    if any(char.isupper() for char in password):
+        character_types += 1
+    if any(char.isdigit() for char in password):
+        character_types += 1
+    if any(char in special_chars for char in password):
+        character_types += 1
+
+    strength += character_types
+
+    if strength <= 2:
+        strength_text = "Słabe"
+    elif strength <= 4:
+        strength_text = "Średnie"
+    else:
+        strength_text = "Mocne"
+
+    return strength_text
 
 def generate_password(length, uppercase=True, lowercase=True, digits=True, special_chars=True):
     characters = ''
@@ -33,21 +66,23 @@ def generate_and_display_password():
         special_chars = check_special_chars.get()
 
         password = generate_password(password_length, uppercase, lowercase, digits, special_chars)
+        password_strength = calculate_password_strength(password)
 
         pyperclip.copy(password)
 
         label_password.config(text="Wygenerowane hasło: " + password)
+        label_strength.config(text="Siła hasła: " + password_strength)
 
     except ValueError:
         messagebox.showerror("Error", "Nieprawidłowa liczba znaków.")
 
 def copy_password():
-    password = label_password.cget("text").split(": ")[1]
+    password = label_password.cget("text").split(": ")[1].strip()
     pyperclip.copy(password)
     messagebox.showinfo("Sukces", "Hasło zostało skopiowane.")
 
 def save_password():
-    password = label_password.cget("text").split(": ")[1]
+    password = label_password.cget("text").split(": ")[1].strip()
     try:
         desktop_path = os.path.expanduser("~/Desktop")
         file_path = os.path.join(desktop_path, "haslo.txt")
@@ -58,11 +93,6 @@ def save_password():
         messagebox.showinfo("Sukces", f"Hasło zostało zapisane do pliku {file_path}.")
     except Exception as e:
         messagebox.showerror("Error", "Wystąpił błąd podczas zapisywania hasła: " + str(e))
-
-def add_copyright_label():
-    copyright_text = "© 2023 Szymon Wasik. Wersja 1.0.0"
-    copyright_label = tk.Label(root, text=copyright_text, font=("Arial", 10), fg="gray")
-    copyright_label.pack(side="bottom", pady=5)
 
 root = tk.Tk()
 root.title("Generator hasła")
@@ -108,5 +138,11 @@ button_save.pack()
 label_strength = tk.Label(root, text="")
 label_strength.pack()
 
+def add_copyright_label():
+    copyright_text = "© 2023 Szymon Wasik. Wersja 1.0.1"
+    copyright_label = tk.Label(root, text=copyright_text, font=("Arial", 10), fg="gray")
+    copyright_label.pack(side="bottom", pady=5)
+
 add_copyright_label()
+
 root.mainloop()
